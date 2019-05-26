@@ -102,6 +102,8 @@ void setup()
      // Setup players
     player1.id = 1;
     player2.id = 2;
+
+    playStartupTone();
     
     resetGame();
 }
@@ -144,6 +146,24 @@ void signalLongPress2() {
     buzzer.beep(100);
     delay(20);
     buzzer.beep(100);
+}
+void playStartupTone() {
+    int length = 5;
+    char notes[] = "eee C";
+    int beats[] = { 2, 2, 2, 2, 5 }; 
+    int tempo = 60;
+
+    buzzer.playMusic(notes, beats, tempo, length);
+
+    delay(200);
+}
+void playWinTone() {
+    int length = 12;
+    char notes[] = "cdefgabC eb";
+    int beats[] = { 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 6 }; 
+    int tempo = 60;
+
+    buzzer.playMusic(notes, beats, tempo, length);
 }
 
 /** Radio handler */
@@ -280,17 +300,6 @@ void checkWin() {
         }
     }  
 }
-
-void playWinTone() {
-    int length = 12;
-    char notes[] = "cdefgabC eb";
-    int beats[] = { 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 6 }; 
-    int tempo = 60;
-
-    buzzer.playMusic(notes, beats, tempo, length);
-}
-
-
 void resetGame() {
     isGameOver = false;
     servingCounter = 0;
