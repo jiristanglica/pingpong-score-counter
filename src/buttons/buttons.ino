@@ -71,14 +71,8 @@ void sendRadioMessage(int msgId) {
 
 void sendHeartbeat() {
     if (millis() - lastHb > 5000) {
-        Serial.print(millis());
-        Serial.print(" :: ");
-        Serial.print(lastHb);
-        Serial.println();
-        
         sendRadioMessage(RADIO_MSG_HEARTBEAT);
         lastHb = millis();
-        Serial.println("HB");
     }
 }
 
