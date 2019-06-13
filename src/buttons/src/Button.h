@@ -25,6 +25,7 @@ private:
     /** Methods */
     void log(char msg[]);
 
+    bool isDebounce();
     bool isShortPressed();
     bool isLongPressed_1();
     bool isLongPressed_2();

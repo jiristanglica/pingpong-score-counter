@@ -63,9 +63,10 @@ void loop() {
 
 /** Radio handler */
 void sendRadioMessage(int msgId) {
-    String msgIdString = (String)msgId;
-    char buff[2];
-    msgIdString.toCharArray(buff, sizeof(msgIdString));
+    if(msgId > 0xff) return; 
+    
+    char buff[2]; // one byte of data max.. and null termination
+    itoa(msgId, (char*)&buff, 10);
     radio.write(&buff, sizeof(buff));
 }
 

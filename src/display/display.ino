@@ -47,7 +47,7 @@ typedef struct Players {
     bool isServing = false;
 
     String scoreString() {
-        char cstr[2];
+        char cstr[3]; // 2 chars + null termination
         itoa(this->score, cstr, 10);
         return cstr;
     }
@@ -112,7 +112,7 @@ void loop()
 {
     checkHeartbeat();
     if (radio.available()) {
-        char text[2] = "";
+        char text[3] = "";
         radio.read(&text, sizeof(text));
         handleRadioMessage(text);
     }
@@ -168,6 +168,9 @@ void playWinTone() {
 
 /** Radio handler */
 void handleRadioMessage(char msgChars[]) {
+    msgChars[2] = '\0'; // failing atoi is undefined behaviour.. tryihg to avoid.. TODO: is strtol possible ?
+    // COMMENT: using string commands would be a bit more robust solution. fex: "1" instead of 1
+    // If using integer commands, I would convert this to switch-case
     int msgId = atoi(msgChars);
     if (msgId == RADIO_MSG_BUTTON_1_PRESS) addPlayerScore(1);
     if (msgId == RADIO_MSG_BUTTON_1_LONG_PRESS_1_SIGNAL) signalLongPress1();
@@ -250,7 +253,7 @@ void addPlayerScore(int playerId) {
     if (playerId == 1) {
         player1.score++;
     }
-    if (playerId == 2) {
+    else if (playerId == 2) {
         player2.score++;
     }
     servingCounter++;

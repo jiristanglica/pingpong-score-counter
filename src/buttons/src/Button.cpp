@@ -14,6 +14,10 @@ void Button::log(char msg[]) {
 }
 
 /** Helper methods */
+bool Button::isDebounce() {
+    return (millis() - this->counter <= this->debounce);
+}
+
 bool Button::isShortPressed() {
     return (millis() - this->counter >= SHORT_PRESS_TIME) && !(millis() - this->counter >= LONG_PRESS_1_TIME);
 }
@@ -29,37 +33,34 @@ void Button::checkState() {
     // Read the current state of the button
     this->currentState = digitalRead(this->pin);
 
-    if (this->currentState != this->prevState) {
-        delay(this->debounce);
-        // Update status in case of bounce
-        this->currentState = digitalRead(this->pin);
-
-        if (this->currentState == PRESSED) {
-            // New press event occured, record when button went down
-            this->counter = millis();
+    if (this->currentState == this->prevState) {
+        // Signals for long presses
+        if (this->currentState == PRESSED && this->isLongPressed_1() && !this->longPress_1_Noted) {
+            this->signalLongPress_1();
         }
-
-        if (this->currentState == NOT_PRESSED) {
-            // No longer pressed, handle based on how long was it pressed
-            if (this->isShortPressed()) {
-                this->handleShortPress();
-            }
-            if (this->isLongPressed_1()) {
-                this->handleLongPress_1();
-            }
-            if (this->isLongPressed_2()) {
-                this->handleLongPress_2();
-            }
+        if (this->currentState == PRESSED && this->isLongPressed_2() && !this->longPress_2_Noted) {
+            this->signalLongPress_2();
         }
-        this->prevState = this->currentState;
+        return;
     }
-    // Signals for long presses
-    if (this->currentState == PRESSED && this->isLongPressed_1() && !this->longPress_1_Noted) {
-        this->signalLongPress_1();
+
+    if (this->currentState == PRESSED) {
+        // New press event occured, record when button went down
+        this->counter = millis();
     }
-    if (this->currentState == PRESSED && this->isLongPressed_2() && !this->longPress_2_Noted) {
-        this->signalLongPress_2();
+    else if(!this->isDebounce()) {
+        // No longer pressed, handle based on how long was it pressed        
+        if (this->isShortPressed()) {
+            this->handleShortPress();
+        }
+        else if (this->isLongPressed_1()) {
+            this->handleLongPress_1();
+        }
+        else if (this->isLongPressed_2()) {
+            this->handleLongPress_2();
+        }
     }
+    this->prevState = this->currentState;
 }
 
 /** Press signals */
