@@ -168,23 +168,32 @@ void playWinTone() {
 
 /** Radio handler */
 void handleRadioMessage(char msgChars[]) {
-    msgChars[2] = '\0'; // failing atoi is undefined behaviour.. tryihg to avoid.. TODO: is strtol possible ?
+    msgChars[2] = '\0'; // failing atoi is undefined behaviour.. trying to avoid.. TODO: is strtol possible ?
     // COMMENT: using string commands would be a bit more robust solution. fex: "1" instead of 1
     // If using integer commands, I would convert this to switch-case
     int msgId = atoi(msgChars);
-    if (msgId == RADIO_MSG_BUTTON_1_PRESS) addPlayerScore(1);
-    if (msgId == RADIO_MSG_BUTTON_1_LONG_PRESS_1_SIGNAL) signalLongPress1();
-    if (msgId == RADIO_MSG_BUTTON_1_LONG_PRESS_2_SIGNAL) signalLongPress2();
-    if (msgId == RADIO_MSG_BUTTON_1_LONG_PRESS_1) removePlayerScore(1);
-    if (msgId == RADIO_MSG_BUTTON_1_LONG_PRESS_2) resetGame();
 
-    if (msgId == RADIO_MSG_BUTTON_2_PRESS) addPlayerScore(2);
-    if (msgId == RADIO_MSG_BUTTON_2_LONG_PRESS_1_SIGNAL) signalLongPress1();
-    if (msgId == RADIO_MSG_BUTTON_2_LONG_PRESS_2_SIGNAL) signalLongPress2();
-    if (msgId == RADIO_MSG_BUTTON_2_LONG_PRESS_1) removePlayerScore(2);
-    if (msgId == RADIO_MSG_BUTTON_2_LONG_PRESS_2) resetGame();
-
-    if (msgId == RADIO_MSG_HEARTBEAT) handleHeartbeat(); 
+    if (msgId == RADIO_MSG_HEARTBEAT) {
+        handleHeartbeat();
+    } else {
+        // Any button event cancel scrolling text
+        if (isTextScrolling) {
+            resetScrollMessage();
+            return;
+        }
+        
+        if (msgId == RADIO_MSG_BUTTON_1_PRESS) addPlayerScore(1);
+        if (msgId == RADIO_MSG_BUTTON_1_LONG_PRESS_1_SIGNAL) signalLongPress1();
+        if (msgId == RADIO_MSG_BUTTON_1_LONG_PRESS_2_SIGNAL) signalLongPress2();
+        if (msgId == RADIO_MSG_BUTTON_1_LONG_PRESS_1) removePlayerScore(1);
+        if (msgId == RADIO_MSG_BUTTON_1_LONG_PRESS_2) resetGame();
+    
+        if (msgId == RADIO_MSG_BUTTON_2_PRESS) addPlayerScore(2);
+        if (msgId == RADIO_MSG_BUTTON_2_LONG_PRESS_1_SIGNAL) signalLongPress1();
+        if (msgId == RADIO_MSG_BUTTON_2_LONG_PRESS_2_SIGNAL) signalLongPress2();
+        if (msgId == RADIO_MSG_BUTTON_2_LONG_PRESS_1) removePlayerScore(2);
+        if (msgId == RADIO_MSG_BUTTON_2_LONG_PRESS_2) resetGame();
+    }
 }
 
 void handleHeartbeat() {
@@ -228,9 +237,7 @@ void displayPlayerScores() {
 
 
 /** Players logic */
-void addPlayerScore(int playerId) {
-    if (isTextScrolling) return;
-    
+void addPlayerScore(int playerId) {    
     // If game has ended, use a short press as a shortcut to reset the game
     if (isGameOver) {
         resetGame();
@@ -273,7 +280,10 @@ void removePlayerScore(int playerId) {
     }
 }
 void checkServing() {
-    if (servingCounter == 2) {
+    bool isTieGame = (player1.score >= 10 && player2.score >= 10);
+
+    
+    if ((isTieGame && servingCounter >= 1) || (!isTieGame && servingCounter >= 2)) {
         player1.isServing = !player1.isServing;
         player2.isServing = !player2.isServing;
         servingCounter = 0;
@@ -281,7 +291,7 @@ void checkServing() {
     if (servingCounter < 0) {
         player1.isServing = !player1.isServing;
         player2.isServing = !player2.isServing;
-        servingCounter = 1;
+        servingCounter = isTieGame ? 1 : 0;
     }
     displayPlayerScores();
 }
