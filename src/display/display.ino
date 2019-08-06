@@ -39,7 +39,6 @@ const char msgPlayer2Won[] = " Player 2 wins! ";  // 3
 bool isTextScrolling = false;
 unsigned long textScrollingTimer = 0;
 byte msgDisplayed = 1;
-int firstPlayerToPass = -1;
 
 /** Players variables */
 typedef struct Players {
@@ -83,6 +82,7 @@ Player player2;
 
 /** Gameplay variables */
 bool isGameOver = false;
+int firstPlayerToPass = -1;
 
 void setup()
 {
@@ -99,7 +99,7 @@ void setup()
     radio.setPALevel(RF24_PA_MIN);
     radio.startListening();
     
-     // Setup players
+    // Setup players
     player1.id = 1;
     player2.id = 2;
 
@@ -238,8 +238,6 @@ void displayPlayerScores() {
 
 /** Players logic */
 void addPlayerScore(int playerId) {
-    if (isTextScrolling) return;
-    
     // If game has ended, use a short press as a shortcut to reset the game
     if (isGameOver) {
         resetGame();
@@ -251,10 +249,12 @@ void addPlayerScore(int playerId) {
         // New game, first point determines who is serving first
         if (playerId == 1) {
             player1.isServing = true;
+            firstPlayerToPass = 1;
             player1.renderScore();
         }
         if (playerId == 2) {
             player2.isServing = true;
+            firstPlayerToPass = 2;
             player2.renderScore();
         }
         return;
@@ -266,6 +266,7 @@ void addPlayerScore(int playerId) {
         player2.score++;
     }
     checkServing();
+    displayPlayerScores();
     checkWin();
 }
 void removePlayerScore(int playerId) {
@@ -277,6 +278,7 @@ void removePlayerScore(int playerId) {
         player2.score--;
         checkServing();
     }
+    displayPlayerScores();
 }
 
 int getPassingPlayer(int score1, int score2, int firstPasser)
@@ -284,10 +286,12 @@ int getPassingPlayer(int score1, int score2, int firstPasser)
     int fp = firstPasser - 1;
     int currentPasser = 0;
     int totalscore = score1 + score2;
-    if(totalscore>=20)
-        currentPasser = totalscore + fp % 2;
-    else
-        currentPasser = (int)(totalscore/2 + fp)%2;
+    if (totalscore >= 20) {
+        currentPasser = (int)(totalscore + fp) % 2;
+    }
+    else {
+        currentPasser = (int)(totalscore / 2 + fp) % 2;
+    }
 
     return currentPasser + 1;
 }
@@ -325,4 +329,3 @@ void resetGame() {
     displayScrollMessage(1);
     buzzer.beep(500);
 }
-
