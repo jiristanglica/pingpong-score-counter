@@ -39,6 +39,7 @@ const char msgPlayer2Won[] = " Player 2 wins! ";  // 3
 bool isTextScrolling = false;
 unsigned long textScrollingTimer = 0;
 byte msgDisplayed = 1;
+int firstPlayerToPass = -1;
 
 /** Players variables */
 typedef struct Players {
@@ -82,7 +83,6 @@ Player player2;
 
 /** Gameplay variables */
 bool isGameOver = false;
-int servingCounter = 0;
 
 void setup()
 {
@@ -237,7 +237,9 @@ void displayPlayerScores() {
 
 
 /** Players logic */
-void addPlayerScore(int playerId) {    
+void addPlayerScore(int playerId) {
+    if (isTextScrolling) return;
+    
     // If game has ended, use a short press as a shortcut to reset the game
     if (isGameOver) {
         resetGame();
@@ -260,40 +262,40 @@ void addPlayerScore(int playerId) {
     if (playerId == 1) {
         player1.score++;
     }
-    else if (playerId == 2) {
+    if (playerId == 2) {
         player2.score++;
     }
-    servingCounter++;
     checkServing();
     checkWin();
 }
 void removePlayerScore(int playerId) {
     if (playerId == 1 && player1.score > 0) {
         player1.score--;
-        servingCounter--;
         checkServing();
     }
     if (playerId == 2 && player2.score > 0) {
         player2.score--;
-        servingCounter--;
         checkServing();
     }
 }
-void checkServing() {
-    bool isTieGame = (player1.score >= 10 && player2.score >= 10);
 
-    
-    if ((isTieGame && servingCounter >= 1) || (!isTieGame && servingCounter >= 2)) {
-        player1.isServing = !player1.isServing;
-        player2.isServing = !player2.isServing;
-        servingCounter = 0;
-    }
-    if (servingCounter < 0) {
-        player1.isServing = !player1.isServing;
-        player2.isServing = !player2.isServing;
-        servingCounter = isTieGame ? 1 : 0;
-    }
-    displayPlayerScores();
+int getPassingPlayer(int score1, int score2, int firstPasser)
+{
+    int fp = firstPasser - 1;
+    int currentPasser = 0;
+    int totalscore = score1 + score2;
+    if(totalscore>=20)
+        currentPasser = totalscore + fp % 2;
+    else
+        currentPasser = (int)(totalscore/2 + fp)%2;
+
+    return currentPasser + 1;
+}
+
+void checkServing() {
+    int passingPlayer = getPassingPlayer(player1.score, player2.score, firstPlayerToPass);
+    player1.isServing = passingPlayer == 1;
+    player2.isServing = passingPlayer == 2;
 }
 void checkWin() {
     if (player1.score >= 11 || player2.score >= 11) {
@@ -315,7 +317,6 @@ void checkWin() {
 }
 void resetGame() {
     isGameOver = false;
-    servingCounter = 0;
     player1.score = 0;
     player1.isServing = false;
     player2.score = 0;
