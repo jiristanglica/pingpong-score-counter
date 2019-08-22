@@ -86,9 +86,7 @@ int firstPlayerToPass = -1;
 
 void setup()
 {
-    Serial.begin(9600);
-    Serial.print("Ready");
-    Serial.println();
+    Serial.begin(57600);
     
     // Setup display
     disp.init();
@@ -257,6 +255,7 @@ void addPlayerScore(int playerId) {
             firstPlayerToPass = 2;
             player2.renderScore();
         }
+        sendScoreMessage();
         return;
     }
     if (playerId == 1) {
@@ -267,6 +266,7 @@ void addPlayerScore(int playerId) {
     }
     checkServing();
     displayPlayerScores();
+    sendScoreMessage();
     checkWin();
 }
 void removePlayerScore(int playerId) {
@@ -279,6 +279,7 @@ void removePlayerScore(int playerId) {
         checkServing();
     }
     displayPlayerScores();
+    sendScoreMessage();
 }
 
 int getPassingPlayer(int score1, int score2, int firstPasser)
@@ -304,14 +305,12 @@ void checkServing() {
 void checkWin() {
     if (player1.score >= 11 || player2.score >= 11) {
         if ((player1.score - player2.score) >= 2) {
-            Serial.println("Player 1 win!");
             isGameOver = true;
             delay(1000);
             // displayScrollMessage(2);
             playWinTone();
         }
         if ((player2.score - player1.score) >= 2) {
-            Serial.println("Player 2 win!");
             isGameOver = true;
             delay(1000);
             // displayScrollMessage(3);
@@ -328,4 +327,22 @@ void resetGame() {
     displayPlayerScores();
     displayScrollMessage(1);
     buzzer.beep(500);
+    sendNewgameMessage();
+}
+
+/** Integration logic */
+void sendScoreMessage() {
+    int servingPlayer = 0;
+    if (player1.isServing) servingPlayer = 1;
+    if (player2.isServing) servingPlayer = 2;
+
+    Serial.print("score_");
+    Serial.print(player1.score);
+    Serial.print("_");
+    Serial.print(player2.score);
+    Serial.print("_");
+    Serial.print(servingPlayer);
+}
+void sendNewgameMessage() {
+    Serial.print("newgame");
 }
